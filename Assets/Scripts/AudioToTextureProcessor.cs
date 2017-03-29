@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 
-[RequireComponent (typeof(MeshRenderer))]
+[RequireComponent (typeof(MeshRenderer), typeof(AudioSource))]
 public class AudioToTextureProcessor : MonoBehaviour {
     private static int AUDIO_SAMPLE_SIZE = 256;
 
+    private AudioSource audioSource;
     private Material audioMaterial;
     private float[] audioSampleData;
     private Texture2D audioTexture;
@@ -11,6 +12,7 @@ public class AudioToTextureProcessor : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        audioSource = gameObject.GetComponent<AudioSource>();
         audioSampleData = new float[AUDIO_SAMPLE_SIZE];
         audioTexture = new Texture2D(AUDIO_SAMPLE_SIZE, 1, TextureFormat.RGBA32, false);
 
@@ -21,7 +23,7 @@ public class AudioToTextureProcessor : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        AudioListener.GetSpectrumData(audioSampleData, 0, FFTWindow.Triangle);
+        audioSource.GetSpectrumData(audioSampleData, 0, FFTWindow.Triangle);
         //Debug.Log("Begin Sample Data");
 
         for (int sampleIndex = 0; sampleIndex < AUDIO_SAMPLE_SIZE; sampleIndex++) {
