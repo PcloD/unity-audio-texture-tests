@@ -9,7 +9,7 @@
 //     http://answers.unity3d.com/questions/157940/getoutputdata-and-getspectrumdata-they-represent-t.html
 //     ///
 public class AudioSpectrumAnalyser  {
-    private const float MINIMUM_AMPLITUDE_FOR_PITCH = 0.02f;
+    private const float MINIMUM_AMPLITUDE_FOR_PITCH = 0.0002f;
 
     // Constant values for sample sizes that must be a power of 2.
     public enum AudioSampleSize : uint {
@@ -30,8 +30,11 @@ public class AudioSpectrumAnalyser  {
     private float pitchValue = 0.0f;
     public float pitch { get { return pitchValue; } }
 
-    private uint maxAmplitudeBandIndex = 0;
-    public uint dominantFrequencyBandIndex { get { return maxAmplitudeBandIndex; }  }
+    private int maxAmplitudeBandIndex = -1;
+    public int dominantFrequencyBandIndex { get { return maxAmplitudeBandIndex; } }
+
+    private float frequencyRange;
+    public float frequencyRangePerBand { get { return frequencyRange; } }
 
     //
     // Summary:
@@ -52,6 +55,8 @@ public class AudioSpectrumAnalyser  {
 
         sampleSize = audioSampleSize;
         spectrumData = new float[(uint)sampleSize];
+
+        frequencyRange = ((AudioSampleRate() * 0.5f) / (int)sampleSize);
     }
 
     //
@@ -76,8 +81,10 @@ public class AudioSpectrumAnalyser  {
     //     Determines the dominant frequency band and pitch value from the sampled audio spectrum
     //     ///
     private float DeterminePitch() {
+        maxAmplitudeBandIndex = -1;
+
         float maxAmplitude = 0.0f;
-        for (uint index = 0; index < (uint)sampleSize; index++) {
+        for (int index = 0; index < (int)sampleSize; index++) {
             if (spectrumData[index] > maxAmplitude && spectrumData[index] > MINIMUM_AMPLITUDE_FOR_PITCH) {
                 maxAmplitude = spectrumData[index];
                 maxAmplitudeBandIndex = index;
@@ -85,13 +92,13 @@ public class AudioSpectrumAnalyser  {
         }
 
         float amplitudeBandIndex = maxAmplitudeBandIndex;
-        if (maxAmplitudeBandIndex > 0 && (maxAmplitudeBandIndex < (uint)sampleSize - 1)) { 
+        if (maxAmplitudeBandIndex > 0 && (maxAmplitudeBandIndex < (int)sampleSize - 1)) { 
             float previousBandIndexAmplitude = spectrumData[maxAmplitudeBandIndex - 1] / maxAmplitude;
             float nextBandIndexAmplitude = spectrumData[maxAmplitudeBandIndex + 1] / maxAmplitude;
             amplitudeBandIndex += 0.5f * (previousBandIndexAmplitude * previousBandIndexAmplitude - nextBandIndexAmplitude * nextBandIndexAmplitude);
         }
 
-        return amplitudeBandIndex * ((AudioSampleRate() * 0.5f) / (uint)sampleSize);
+        return amplitudeBandIndex * frequencyRangePerBand;
     }
 
     //
